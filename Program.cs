@@ -11,10 +11,13 @@
 //программа возвращает введенный текст (в данном примере "Hello").
 //Основной цикл программы: Программа продолжает ожидать ввод команды от пользователя, пока не будет введена команда /exit.
 
+using System.Text;
+
 namespace DZ_18._02._2025
 {
     internal class Program
     {
+        private static List<string> listTask = new List<string>(); //лист для хранения задач
         static void Main(string[] args)
         {
             string userName = string.Empty;
@@ -68,6 +71,18 @@ namespace DZ_18._02._2025
                         }
                         break;
 
+                    case "/addtask":
+                        AddTask();
+                        break;
+
+                    case "/showtasks":
+                        ShowTasks();
+                        break;
+
+                    case "/removetask":
+                        RemoveTask();
+                        break;
+
                     case "/exit":
                         Console.WriteLine("Спасибо за использование нашего бота! До свидания!");
                         isRunning = false;
@@ -76,6 +91,64 @@ namespace DZ_18._02._2025
                     default:
                         Console.WriteLine("Неизвестная команда. Пожалуйста, попробуйте снова.\nИли используйте команду /help для вызова корректных команд.");
                         break;
+                }
+            }
+
+        }
+        public static void AddTask()
+        {
+            Console.WriteLine("Пожалуйста, введите описание задачи: ");
+            string newTask = Console.ReadLine();
+            if (!string.IsNullOrEmpty(newTask))
+            {
+                listTask.Add(newTask);
+                Console.WriteLine("Задача добавлена: " + newTask);
+            }
+        }
+        public static void ShowTasks()
+        {
+            if (listTask.Count != 0)
+            {
+                // Отображаем список задач
+                var stringBuilder_listTask = new StringBuilder("Вот ваш список задач:\n");
+                for (int i = 0; i < listTask.Count; i++)
+                {
+                    stringBuilder_listTask.AppendLine($"{i + 1}. {listTask[i]}");
+                }
+                Console.WriteLine(stringBuilder_listTask.ToString());
+            }
+            else
+            {
+                Console.WriteLine("Список задач пуст.");
+                return;
+            }
+        }
+        public static void RemoveTask()
+        {
+            if (listTask.Count == 0)
+            {
+                Console.WriteLine("Невозможно удалить задачу, список пуст.");
+                return;
+            }
+            else
+            {
+                ShowTasks();
+                Console.WriteLine("введите номер задачи для удаления:");
+                if (int.TryParse(Console.ReadLine(), out int taskNumber))
+                {
+                    if (taskNumber > 0 && taskNumber <= listTask.Count)
+                    {
+                        listTask.RemoveAt(taskNumber - 1);
+                        Console.WriteLine($"Задача {taskNumber} удалена.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Введите корректный номер задачи, который требуется удалить!");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Некорректный ввод. Введите число.");
                 }
             }
         }
