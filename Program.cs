@@ -12,6 +12,7 @@
 //Основной цикл программы: Программа продолжает ожидать ввод команды от пользователя, пока не будет введена команда /exit.
 
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DZ_18._02._2025
 {
@@ -23,32 +24,40 @@ namespace DZ_18._02._2025
             string userName = string.Empty;
             bool isRunning = true;
 
-            Console.WriteLine("Добро пожаловать в нашего бота! Доступные команды: /start, /help, /info, /exit");
+            Console.WriteLine("Добро пожаловать в нашего бота! Доступные команды: /start, /help, /info, /echo, /addtask, /showtasks, /removetask, /exit");
 
             while (isRunning)
             {
                 Console.Write("Введите команду: ");
-                string input = Console.ReadLine();
+                string? input = Console.ReadLine();
                 switch (input.ToLower())
                 {
                     case "/start":
-                        if (string.IsNullOrEmpty(userName))
+                        while (true)
                         {
-                            Console.Write("Пожалуйста, введите ваше имя: ");
+                            Console.Write("Пожалуйста, введите ваше имя пользователя: ");
                             userName = Console.ReadLine();
-                            Console.WriteLine($"Привет, {userName}! Как я могу помочь вам сегодня?");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"С возвращением, {userName}!");
+
+                            if (IsvalidUserName(userName))
+                            {
+                                Console.WriteLine($"Привет, {userName}! Как я могу помочь вам сегодня?");
+                                break; // Выход из цикла, если имя пользователя валидно
+                            }
+                            else
+                            {
+                                Console.WriteLine("Имя пользователя некорректно. Пожалуйста, используйте только буквы и длину от 3 до 20 символов.");
+                            }
                         }
                         break;
-                    
+
                     case "/help":
                         Console.WriteLine("Справка: Используйте команды: ");
                         Console.WriteLine("/start - для начала работы с ботом;");
                          Console.WriteLine("info - для информации о программе;");
                          Console.WriteLine("/echo - для повторения введенного текста;");
+                         Console.WriteLine("/addtask - добавить задачу в список;");
+                         Console.WriteLine("/showtasks - показать задачи из списка;");
+                         Console.WriteLine("/removetask - удалить задачу из списка;");
                         Console.WriteLine("/exit - для выхода;");
                         break;
 
@@ -64,7 +73,7 @@ namespace DZ_18._02._2025
                         else
                         {
                             Console.Write($"{userName}, введите текст для повторения: ");
-                            string echoText = Console.ReadLine();
+                            string? echoText = Console.ReadLine();
                             // Удаляем подстроку "/echo" из введенного текста
                             string cleanedText = echoText.Replace("/echo", string.Empty).Trim();
                             Console.WriteLine($"{userName}, Вы сказали: {cleanedText}");
@@ -98,7 +107,7 @@ namespace DZ_18._02._2025
         public static void AddTask()
         {
             Console.WriteLine("Пожалуйста, введите описание задачи: ");
-            string newTask = Console.ReadLine();
+            string? newTask = Console.ReadLine();
             if (!string.IsNullOrEmpty(newTask))
             {
                 listTask.Add(newTask);
@@ -151,6 +160,13 @@ namespace DZ_18._02._2025
                     Console.WriteLine("Некорректный ввод. Введите число.");
                 }
             }
+        }
+        static bool IsvalidUserName(string username)
+        {
+            // Регулярное выражение для проверки имени пользователя
+            string pattern = @"^[a-zA-Z]{3,20}$";
+            Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
+            return regex.IsMatch(username);
         }
     }
 }
