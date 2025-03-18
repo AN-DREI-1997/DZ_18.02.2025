@@ -24,7 +24,7 @@ namespace DZ_18._02._2025
             string userName = string.Empty;
             bool isRunning = true;
 
-            Console.WriteLine("Добро пожаловать в нашего бота! Доступные команды: /start, /help, /info, /echo, /addtask, /showtasks, /removetask, /exit");
+            Console.WriteLine("Добро пожаловать в нашего бота! Доступные команды: /start, /help, /info, /exit");
 
             while (isRunning)
             {
@@ -55,9 +55,6 @@ namespace DZ_18._02._2025
                         Console.WriteLine("/start - для начала работы с ботом;");
                          Console.WriteLine("info - для информации о программе;");
                          Console.WriteLine("/echo - для повторения введенного текста;");
-                         Console.WriteLine("/addtask - добавить задачу в список;");
-                         Console.WriteLine("/showtasks - показать задачи из списка;");
-                         Console.WriteLine("/removetask - удалить задачу из списка;");
                         Console.WriteLine("/exit - для выхода;");
                         break;
 
