@@ -1,117 +1,204 @@
-﻿
-//Описание/Пошаговая инструкция выполнения домашнего задания:
-//Вам предстоит создать консольное приложение, которое будет имитировать интерактивное меню бота согласно следующему плану:
-
-//Приветствие: При запуске программы отображается сообщение приветствия со списком доступных команд: / start, / help, / info, / exit.
-//Обработка команды /start: Если пользователь вводит команду /start, программа просит его ввести своё имя. Сохраните введенное имя в переменную.
-//Программа должна обращаться к пользователю по имени в каждом следующем ответе.
-//Обработка команды /help: Отображает краткую справочную информацию о том, как пользоваться программой.
-//Обработка команды /info: Предоставляет информацию о версии программы и дате её создания.
-//Доступ к команде /echo: После ввода имени становится доступной команда /echo. При вводе этой команды с аргументом (например, /echo Hello),
-//программа возвращает введенный текст (в данном примере "Hello").
-//Основной цикл программы: Программа продолжает ожидать ввод команды от пользователя, пока не будет введена команда /exit.
-
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
+using static DZ_18._02._2025.MyCustomException;
 
 namespace DZ_18._02._2025
 {
     internal class Program
     {
         private static List<string> listTask = new List<string>(); //лист для хранения задач
+        private static int maxTaskCount;
+        private static int maxTaskLenght;
+        static string userName = string.Empty;
         static void Main(string[] args)
         {
-            string userName = string.Empty;
-            bool isRunning = true;
-
-            Console.WriteLine("Добро пожаловать в нашего бота! Доступные команды: /start, /help, /info, /echo, /addtask, /showtasks, /removetask, /exit");
-
-            while (isRunning)
+            try
             {
-                Console.Write("Введите команду: ");
-                string? input = Console.ReadLine();
-                switch (input.ToLower())
+                bool isRunning = true;
+                bool isCountTask = true;
+                bool isLengthLimitTask = true;
+
+                Console.WriteLine("Добро пожаловать в нашего бота! Доступные команды: /start, /help, /info, /echo, /addtask, /showtasks, /removetask, /exit\n");
+                while (isCountTask)
                 {
-                    case "/start":
-                        while (true)
+                    try
+                    {
+                        Console.WriteLine("Введите максимально допустимое количество задач (от 1 до 100):");
+                        string input = Console.ReadLine();
+                        maxTaskCount = ValidateTaskCount(input);
+                        isCountTask = false;
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+
+                while (isLengthLimitTask)
+                {
+                    try
+                    {
+                        Console.WriteLine("Введите максимально допустимую длину задачи (от 1 до 100):");
+                        string input = Console.ReadLine();
+                        maxTaskLenght = ValidateTaskCount(input);
+                        isLengthLimitTask = false;
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+
+                while (isRunning)
+                {
+                    Console.Write("Введите команду: ");
+                    string? input = Console.ReadLine();
+                    if (input.Equals("/start", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Start();
+                    }
+                    else if (input.Equals("/help", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Help();
+                    }
+                    else if (input.Equals("/info", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Info();
+                    }
+                    else if (input.Equals("/echo", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Echo();
+                    }
+                    else if (input.Equals("/addtask", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try
                         {
-                            Console.Write("Пожалуйста, введите ваше имя пользователя: ");
-                            userName = Console.ReadLine();
-
-                            if (IsvalidUserName(userName))
-                            {
-                                Console.WriteLine($"Привет, {userName}! Как я могу помочь вам сегодня?");
-                                break; // Выход из цикла, если имя пользователя валидно
-                            }
-                            else
-                            {
-                                Console.WriteLine("Имя пользователя некорректно. Пожалуйста, используйте только буквы и длину от 3 до 20 символов.");
-                            }
+                            AddTask();
                         }
-                        break;
-
-                    case "/help":
-                        Console.WriteLine("Справка: Используйте команды: ");
-                        Console.WriteLine("/start - для начала работы с ботом;");
-                         Console.WriteLine("info - для информации о программе;");
-                         Console.WriteLine("/echo - для повторения введенного текста;");
-                         Console.WriteLine("/addtask - добавить задачу в список;");
-                         Console.WriteLine("/showtasks - показать задачи из списка;");
-                         Console.WriteLine("/removetask - удалить задачу из списка;");
-                        Console.WriteLine("/exit - для выхода;");
-                        break;
-
-                    case "/info":
-                        Console.WriteLine("Версия программы: 1.0.\nДата создания: Февраль 2025.");
-                        break;
-
-                    case "/echo":
-                        if (string.IsNullOrEmpty(userName))
+                        catch (TaskCountLimitException ex)
                         {
-                            Console.WriteLine("Сначала введите команду /start и ваше имя.");
+                            Console.WriteLine(ex.Message);
                         }
-                        else
+                        catch (TaskLengthLimitException ex)
                         {
-                            Console.Write($"{userName}, введите текст для повторения: ");
-                            string? echoText = Console.ReadLine();
-                            // Удаляем подстроку "/echo" из введенного текста
-                            string cleanedText = echoText.Replace("/echo", string.Empty).Trim();
-                            Console.WriteLine($"{userName}, Вы сказали: {cleanedText}");
+                            Console.WriteLine(ex.Message);
                         }
-                        break;
-
-                    case "/addtask":
-                        AddTask();
-                        break;
-
-                    case "/showtasks":
-                        ShowTasks();
-                        break;
-
-                    case "/removetask":
-                        RemoveTask();
-                        break;
-
-                    case "/exit":
+                        catch (ArgumentException ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+                    }
+                    else if (input.Equals("/exit", StringComparison.OrdinalIgnoreCase))
+                    {
                         Console.WriteLine("Спасибо за использование нашего бота! До свидания!");
                         isRunning = false;
                         break;
-
-                    default:
+                    }
+                    else
+                    {
                         Console.WriteLine("Неизвестная команда. Пожалуйста, попробуйте снова.\nИли используйте команду /help для вызова корректных команд.");
-                        break;
+                    }
                 }
             }
+            catch
+            {
 
+            }
         }
+
+        private static void Echo()
+        {
+            if (string.IsNullOrEmpty(userName))
+            {
+                Console.WriteLine("Сначала введите команду /start и ваше имя.");
+            }
+            else
+            {
+                Console.Write($"{userName}, введите текст для повторения: ");
+                string? echoText = Console.ReadLine();
+                // Удаляем подстроку "/echo" из введенного текста
+                string cleanedText = echoText.Replace("/echo", string.Empty).Trim();
+                Console.WriteLine($"{userName}, Вы сказали: {cleanedText}");
+            }
+        }
+
+        private static void Start()
+        {
+            while (true)
+            {
+                Console.Write("Пожалуйста, введите ваше имя пользователя: ");
+                userName = Console.ReadLine();
+
+                if (IsvalidUserName(userName))
+                {
+                    Console.WriteLine($"Привет, {userName}! Как я могу помочь вам сегодня?");
+                    break; // Выход из цикла, если имя пользователя валидно
+                }
+                else
+                {
+                    Console.WriteLine("Имя пользователя некорректно. Пожалуйста, используйте только буквы и длину от 3 до 20 символов.");
+                }
+            }
+        }
+
+        private static void Help()
+        {
+            Console.WriteLine("Справка: Используйте команды: ");
+            Console.WriteLine("/start - для начала работы с ботом;");
+            Console.WriteLine("info - для информации о программе;");
+            Console.WriteLine("/echo - для повторения введенного текста;");
+            Console.WriteLine("/addtask - добавить задачу в список;");
+            Console.WriteLine("/showtasks - показать задачи из списка;");
+            Console.WriteLine("/removetask - удалить задачу из списка;");
+            Console.WriteLine("/exit - для выхода;");
+        }
+
+        private static void Info()
+        {
+            Console.WriteLine("Версия программы: 1.0.\nДата создания: Февраль 2025.");
+        }
+
         public static void AddTask()
         {
-            Console.WriteLine("Пожалуйста, введите описание задачи: ");
-            string? newTask = Console.ReadLine();
-            if (!string.IsNullOrEmpty(newTask))
+            while (true)
             {
-                listTask.Add(newTask);
-                Console.WriteLine("Задача добавлена: " + newTask);
+                try
+                {
+                    int currentTaskCount = listTask.Count; // текущее количество задач
+                    if (currentTaskCount >= maxTaskCount)
+                    {
+                        throw new TaskCountLimitException(maxTaskCount);
+                    }
+
+                    Console.WriteLine("Пожалуйста, введите описание задачи: ");
+                    string? newTask = Console.ReadLine();
+                    ValidateString(newTask);
+                    if (!string.IsNullOrEmpty(newTask))
+                    {
+
+                        if (newTask.Length <= maxTaskLenght)
+                        {
+                            listTask.Add(newTask);
+                            Console.WriteLine("Задача добавлена: " + newTask);
+                            break; // Выход из цикла, если задача успешно добавлена
+                        }
+                        else
+                        {
+                            throw new TaskLengthLimitException(newTask.Length, maxTaskLenght);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Описание задачи не может быть пустым. Пожалуйста, попробуйте снова.");
+                    }
+                }
+                catch (TaskCountLimitException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine("Пожалуйста, удалите одну из существующих задач, чтобы добавить новую.");
+                    ShowTasks(); // Показываем текущие задачи
+                    RemoveTask(); // Предлагаем удалить задачу
+                }
             }
         }
         public static void ShowTasks()
@@ -167,6 +254,33 @@ namespace DZ_18._02._2025
             string pattern = @"^[a-zA-Z]{3,20}$";
             Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
             return regex.IsMatch(username);
+        }
+
+
+        private static int ValidateTaskCount(string input)
+        {
+            if (!int.TryParse(input, out int taskCount) || taskCount < 1 || taskCount > 100)
+            {
+                throw new ArgumentException("Введите корректное число от 1 до 100.");
+            }
+            return taskCount;
+        }
+        public static void ValidateString(string? str)
+        {
+            // Проверка на null
+            if (str == null)
+            {
+                throw new ArgumentException("Строка не должна быть null.");
+            }
+
+            // Проверка на пустую строку
+            if (str.Trim().Length == 0)
+            {
+                throw new ArgumentException("Строка не должна быть пустой или состоять только из пробелов.");
+            }
+
+            // Если все проверки пройдены, строка валидна
+            Console.WriteLine("Строка валидна: " + str);
         }
     }
 }
