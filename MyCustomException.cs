@@ -8,7 +8,6 @@ namespace DZ_18._02._2025
 {
     public class MyCustomException: Exception
     {
-        
         public class TaskCountLimitException : Exception
         {
             /// <summary>
