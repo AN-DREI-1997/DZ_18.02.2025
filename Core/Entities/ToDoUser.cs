@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DZ_18._02._2025.Entities
+namespace DZ_18._02._2025.Core.Entities
 {
     public class ToDoUser
     {

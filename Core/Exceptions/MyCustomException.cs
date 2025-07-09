@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DZ_18._02._2025
+namespace DZ_18._02._2025.Core.Exceptions
 {
     public class MyCustomException: Exception
     {
@@ -26,10 +26,10 @@ namespace DZ_18._02._2025
             /// <summary>
             /// Выдает исключение при привышении максимальной длины задачи! 
             /// Принимает параметры:
-            /// <see langword="int taskLength, int taskLengthLimit"/>
+            /// <see langword="int taskLengthLimit"/>
             /// </summary>
-            public TaskLengthLimitException(int taskLength, int taskLengthLimit)
-                : base($"Длина задачи '{taskLength}' превышает максимально допустимое значение {taskLengthLimit}")
+            public TaskLengthLimitException(int taskLengthLimit)
+                : base($"Длина задачи не должна превышать максимально допустимое значение: {taskLengthLimit}")
             {
             }
         }
