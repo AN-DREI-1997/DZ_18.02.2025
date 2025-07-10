@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using DZ_18._02._2025.Core.DadaAccess;
@@ -14,10 +15,10 @@ namespace DZ_18._02._2025.Core.Services
         private readonly IUserRepository _userRepository;
         public UserService(IUserRepository userRepository) 
         {
-            _userRepository = userRepository;
+             _userRepository = userRepository;
         }
 
-        public ToDoUser? GetUser(long telegramUserId)
+        public async Task<ToDoUser?> GetUserAsync(long telegramUserId, CancellationToken cancellationToken)
         {
             // Сначала пытаемся получить пользователя из локального словаря
             if (_users.TryGetValue(telegramUserId, out var user))
@@ -26,7 +27,7 @@ namespace DZ_18._02._2025.Core.Services
             }
 
             // Если не нашли, пробуем получить из репозитория
-            user = _userRepository.GetUserByTelegramUserId(telegramUserId);
+            user = await _userRepository.GetUserAsync(telegramUserId, cancellationToken);
             if (user != null)
             {
                 _users[telegramUserId] = user; // Кэшируем пользователя
@@ -34,13 +35,13 @@ namespace DZ_18._02._2025.Core.Services
             return user;
         }
 
-        public ToDoUser RegisterUser(long telegramUserId, string telegramUserName)
+        public async Task<ToDoUser> RegisterUserAsync(long telegramUserId, string telegramUserName, CancellationToken cancellationToken)
         {
             if (!_users.ContainsKey(telegramUserId))
             {
                 var newUser = new ToDoUser { TelegramUserId = telegramUserId, TelegramUserName = telegramUserName };
                 _users[telegramUserId] = newUser;
-                _userRepository.Add(newUser); // Сохраняем пользователя в репозитории
+                await _userRepository.AddAsync(newUser, cancellationToken); // Сохраняем пользователя в репозитории
             }
             return _users[telegramUserId];
         }

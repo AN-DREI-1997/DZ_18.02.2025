@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using DZ_18._02._2025.Core.DadaAccess;
 using DZ_18._02._2025.Core.Entities;
@@ -12,23 +13,14 @@ namespace DZ_18._02._2025.Infastructure.DataAccess
     {
         private readonly List<ToDoUser> _users = new();
 
-        public void Add(ToDoUser user)
+        public async Task AddAsync(ToDoUser user, CancellationToken cancellationToken)
         {
-            if (!_users.Any(u => u.TelegramUserId == user.TelegramUserId))
-            {
-                _users.Add(user);
-            }
+            await Task.Run(() => _users.Add(user), cancellationToken);
         }
 
-        public ToDoUser? GetUser(Guid userId)
+        public async Task<ToDoUser?> GetUserAsync(long telegramUserId, CancellationToken cancellationToken)
         {
-            // В данном случае, мы не используем Guid, поэтому возвращаем null
-            return null;
-        }
-
-        public ToDoUser? GetUserByTelegramUserId(long telegramUserId)
-        {
-            return _users.FirstOrDefault(u => u.TelegramUserId == telegramUserId);
+            return await Task.FromResult(_users.FirstOrDefault(u => u.TelegramUserId == telegramUserId));
         }
     }
 }
