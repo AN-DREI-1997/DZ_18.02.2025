@@ -22,8 +22,7 @@ namespace DZ_18._02._2025.Infastructure.DataAccess
 
         public ToDoUser? GetUser(Guid userId)
         {
-            // В данном случае, мы не используем Guid, поэтому возвращаем null
-            return null;
+           return  return _users.FirstOrDefault(u => u.UserId == userId);
         }
 
         public ToDoUser? GetUserByTelegramUserId(long telegramUserId)
