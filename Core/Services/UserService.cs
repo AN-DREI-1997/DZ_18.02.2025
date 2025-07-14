@@ -10,7 +10,6 @@ namespace DZ_18._02._2025.Core.Services
 {
     internal class UserService : IUserService
     {
-        private readonly Dictionary<long, ToDoUser> _users = new();
         private readonly IUserRepository _userRepository;
         public UserService(IUserRepository userRepository) 
         {
@@ -19,30 +18,20 @@ namespace DZ_18._02._2025.Core.Services
 
         public ToDoUser? GetUser(long telegramUserId)
         {
-            // Сначала пытаемся получить пользователя из локального словаря
-            if (_users.TryGetValue(telegramUserId, out var user))
-            {
-                return user;
-            }
-
-            // Если не нашли, пробуем получить из репозитория
-            user = _userRepository.GetUserByTelegramUserId(telegramUserId);
-            if (user != null)
-            {
-                _users[telegramUserId] = user; // Кэшируем пользователя
-            }
-            return user;
+            return _userRepository.GetUserByTelegramUserId(telegramUserId);
         }
 
         public ToDoUser RegisterUser(long telegramUserId, string telegramUserName)
         {
-            if (!_users.ContainsKey(telegramUserId))
+           var existUser = _userRepository.GetUserByTelegramUserId(telegramUserId);
+           if (existUser != null)
             {
-                var newUser = new ToDoUser { TelegramUserId = telegramUserId, TelegramUserName = telegramUserName };
-                _users[telegramUserId] = newUser;
-                _userRepository.Add(newUser); // Сохраняем пользователя в репозитории
+                  return existUser;
             }
-            return _users[telegramUserId];
+           var newUser = new ToDoUser();
+           _userRepository.Add(newUser); // Сохраняем пользователя в репозитории
+
+           return newUser;
         }
     }
 }
