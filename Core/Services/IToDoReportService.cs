@@ -10,6 +10,5 @@ namespace DZ_18._02._2025.Core.Services
     interface IToDoReportService
     {
         (int total, int completed, int active, DateTime generatedAt) GetUserStats(Guid userId);
-        IReadOnlyList<ToDoItem> Find(Guid userId, Func<ToDoItem, bool> predicate);
     }
 }
