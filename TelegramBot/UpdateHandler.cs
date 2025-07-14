@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using DZ_18._02._2025.Core.DadaAccess;
 using DZ_18._02._2025.Core.Entities;
 using DZ_18._02._2025.Core.Services;
@@ -15,18 +15,13 @@ namespace DZ_18._02._2025.TelegramBot
         private readonly IToDoService _toDoService;
         private readonly IToDoRepository _toDoRepository; // Добавляем репозиторий задач
 
-        public int _maxTasklength { get; private set; }
-        public int _maxTaskCount { get; private set; }
-
-        public UpdateHandler(ITelegramBotClient botClient, IUserService userService, IToDoService toDoService, IToDoRepository toDoRepository, int maxTaskCount, int maxTasklength)
+       public UpdateHandler(ITelegramBotClient botClient, IUserService userService, IToDoService toDoService, IToDoRepository toDoRepository)
         {
             _botClient = botClient;
             _userService = userService;
             _toDoService = toDoService;
             _toDoRepository = toDoRepository;
-            _maxTasklength = maxTasklength;
-            _maxTaskCount = maxTaskCount;
-        }
+       }
 
         public void HandleUpdateAsync(ITelegramBotClient botClient, Update update)
         {
@@ -94,7 +89,7 @@ namespace DZ_18._02._2025.TelegramBot
                          CmdInfo(message, user);
                         break;
                     case "/addtask":
-                        CmdAddTask(message, user, arg, _maxTaskCount,_maxTasklength);
+                        CmdAddTask(message, user, arg);
                         break;
                     case "/showtasks":
                         CmdShowTasks(message, user);
@@ -249,14 +244,14 @@ namespace DZ_18._02._2025.TelegramBot
             }
         }
 
-        private void CmdAddTask(Message message, ToDoUser? user, string? taskName, int maxTaskCount, int maxTasklength)
+        private void CmdAddTask(Message message, ToDoUser? user, string? taskName)
         {
             if (string.IsNullOrWhiteSpace(taskName))
             {
                 _botClient.SendMessage(message.Chat, "Название задачи не может быть пустым.");
                 return;
             }
-            var addedItem = _toDoService.Add(user, taskName!, maxTaskCount, maxTasklength);
+            var addedItem = _toDoService.Add(user, taskName!);
             _botClient.SendMessage(message.Chat, $"Задача добавлена: {addedItem.Name} - {addedItem.CreatedAt} - {addedItem.Id}");
         }
 
