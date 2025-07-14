@@ -24,7 +24,7 @@ namespace DZ_18._02._2025.Core.Services
         /// <param name="userId"></param>
         /// <returns></returns>
         IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId);
-        ToDoItem Add(ToDoUser user, string name, int maxTaskCount, int maxTasklength);
+        ToDoItem Add(ToDoUser user, string name);
         void MarkCompleted(Guid id);
         void Delete(Guid id);
     }
