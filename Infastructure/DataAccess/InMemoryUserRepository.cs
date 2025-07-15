@@ -22,5 +22,10 @@ namespace DZ_18._02._2025.Infastructure.DataAccess
         {
             return await Task.FromResult(_users.FirstOrDefault(u => u.TelegramUserId == telegramUserId));
         }
+
+        public async Task<ToDoUser?> GetUserByTelegramUserId(long telegramUserId)
+        {
+            return await Task.FromResult(_users.FirstOrDefault(u => u.TelegramUserId == telegramUserId));
+        }
     }
 }

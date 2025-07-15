@@ -11,17 +11,18 @@ namespace DZ_18._02._2025.Core.Services
 {
     internal class ToDoService : IToDoService
     {
-        private readonly List<ToDoItem> _items = new();
         private readonly IToDoRepository _toDoRepository;
-        
+        private int maxTaskLenght;
+        private int maxTaskCount;
 
-        public ToDoService(IToDoRepository repository)
+        public ToDoService(IToDoRepository repository, int maxTaskCount, int maxTasklength)
         {
             _toDoRepository = repository;
-            
+            maxTaskLenght = maxTaskCount;
+            maxTaskCount = maxTasklength;
         }
 
-        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, int maxTaskCount, int maxTaskLenght, CancellationToken cancellationToken)
+        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken cancellationToken)
         {
             
             if (name.Length > maxTaskLenght)

@@ -51,15 +51,15 @@ namespace DZ_18._02._2025
             var userRep = new InMemoryUserRepository(); //репозиторий пользователей
 
             var userService = new UserService(userRep);
-            var toDoService = new ToDoService(toDoRep);
+            var toDoService = new ToDoService(toDoRep, maxTaskCount, maxTaskLenght);
 
             // Создаем обработчик, передавая зависимости через конструктор
             //IUpdateHandler handler = new TelegramBot.UpdateHandler(botClient, userService, toDoService,toDoRep, maxTaskCount, maxTaskLenght);
 
-            UpdateHandler handler = new UpdateHandler(botClient, userService, toDoService, toDoRep, maxTaskCount, maxTaskLenght);
+            var handler = new UpdateHandler(botClient, userService, toDoService, toDoRep);
             // Подписываемся на события начала и завершения обработки обновлений
-            handler. OnHandleUpdateStarted += msg => Console.WriteLine($"Началась обработка сообщения '{msg}'");
-            handler.OnHandleUpdateCompleted += msg => Console.WriteLine($"Закончена обработка сообщения '{msg}'");
+            handler.OnHandleUpdateStarted += msg => Console.WriteLine($"Началась обработка сообщения '{msg}'");
+           handler.OnHandleUpdateCompleted += msg => Console.WriteLine($"Закончена обработка сообщения '{msg}'");
 
             void OnProcessingStarted(string message)
             {

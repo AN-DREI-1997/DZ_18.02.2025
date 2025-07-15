@@ -11,7 +11,6 @@ namespace DZ_18._02._2025.Core.Services
 {
     internal class UserService : IUserService
     {
-        private readonly Dictionary<long, ToDoUser> _users = new();
         private readonly IUserRepository _userRepository;
         public UserService(IUserRepository userRepository) 
         {
@@ -20,30 +19,21 @@ namespace DZ_18._02._2025.Core.Services
 
         public async Task<ToDoUser?> GetUserAsync(long telegramUserId, CancellationToken cancellationToken)
         {
-            // Сначала пытаемся получить пользователя из локального словаря
-            if (_users.TryGetValue(telegramUserId, out var user))
-            {
-                return user;
-            }
-
-            // Если не нашли, пробуем получить из репозитория
-            user = await _userRepository.GetUserAsync(telegramUserId, cancellationToken);
-            if (user != null)
-            {
-                _users[telegramUserId] = user; // Кэшируем пользователя
-            }
-            return user;
+           return await _userRepository.GetUserByTelegramUserId(telegramUserId);
         }
 
         public async Task<ToDoUser> RegisterUserAsync(long telegramUserId, string telegramUserName, CancellationToken cancellationToken)
         {
-            if (!_users.ContainsKey(telegramUserId))
+            var user = new ToDoUser
             {
-                var newUser = new ToDoUser { TelegramUserId = telegramUserId, TelegramUserName = telegramUserName };
-                _users[telegramUserId] = newUser;
-                await _userRepository.AddAsync(newUser, cancellationToken); // Сохраняем пользователя в репозитории
-            }
-            return _users[telegramUserId];
+                UserId = Guid.NewGuid(),
+                TelegramUserId = telegramUserId,
+                TelegramUserName = telegramUserName,
+                RegisteredAt = DateTime.UtcNow
+            };
+
+            await _userRepository.AddAsync(user, cancellationToken);
+            return user; // Возврат объекта
         }
     }
 }

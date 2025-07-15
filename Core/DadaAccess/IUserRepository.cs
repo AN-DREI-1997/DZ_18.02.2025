@@ -13,7 +13,7 @@ namespace DZ_18._02._2025.Core.DadaAccess
     interface IUserRepository
     {
        Task<ToDoUser?> GetUserAsync(long userId, CancellationToken cancellationToken);
-        //Task ToDoUser? GetUserByTelegramUserId(long telegramUserId);
+       Task <ToDoUser?> GetUserByTelegramUserId(long telegramUserId);
         Task AddAsync(ToDoUser user, CancellationToken cancellationToken);
     }
 }

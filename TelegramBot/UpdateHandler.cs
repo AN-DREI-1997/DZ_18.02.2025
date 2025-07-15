@@ -16,22 +16,19 @@ namespace DZ_18._02._2025.TelegramBot
         private readonly IToDoService _toDoService;
         private readonly IToDoRepository _toDoRepository; // Добавляем репозиторий задач
 
-        public int _maxTasklength { get; private set; }
-        public int _maxTaskCount { get; private set; }
-
         // Делегаты и события
         public delegate void MessageEventHandler(string message);
         public event MessageEventHandler? OnHandleUpdateStarted;
         public event MessageEventHandler? OnHandleUpdateCompleted;
 
-        public UpdateHandler(ITelegramBotClient botClient, IUserService userService, IToDoService toDoService, IToDoRepository toDoRepository, int maxTaskCount, int maxTasklength)
+        public UpdateHandler(ITelegramBotClient botClient, IUserService userService, IToDoService toDoService, IToDoRepository toDoRepository)
         {
             _botClient = botClient;
             _userService = userService;
             _toDoService = toDoService;
             _toDoRepository = toDoRepository;
-            _maxTasklength = maxTasklength;
-            _maxTaskCount = maxTaskCount;
+            //OnHandleUpdateCompleted = OnHandleUpdateStarted;
+            //OnHandleUpdateStarted = OnHandleUpdateCompleted;
         }
        
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -87,7 +84,7 @@ namespace DZ_18._02._2025.TelegramBot
                 {
                     if (cmd == "/help" || cmd == "/info")
                     {
-                        ExecutePublicCommand(cmd, message, user,cancellationToken);
+                       await ExecutePublicCommand(cmd, message, user,cancellationToken);
                     }
                     else
                     {
@@ -108,7 +105,7 @@ namespace DZ_18._02._2025.TelegramBot
                         await CmdInfo(message, user, cancellationToken);
                         break;
                     case "/addtask":
-                        await CmdAddTask(message, user, arg, _maxTaskCount,_maxTasklength, cancellationToken);
+                        await CmdAddTask(message, user, arg, cancellationToken);
                         break;
                     case "/showtasks":
                         await CmdShowTasks(message, user, cancellationToken);
@@ -260,16 +257,17 @@ namespace DZ_18._02._2025.TelegramBot
             }
         }
 
-        private async Task CmdAddTask(Message message, ToDoUser? user, string? taskName, int maxTaskCount, int maxTasklength, CancellationToken cancellationToken)
+        private async Task CmdAddTask(Message message, ToDoUser? user, string? taskName, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(taskName))
             {
                 await _botClient.SendMessage(message.Chat, "Название задачи не может быть пустым.", cancellationToken);
                 return;
             }
-            var addedItem = await _toDoService.AddAsync(user, taskName!, maxTaskCount, maxTasklength, cancellationToken);
-            await _botClient.SendMessage(message.Chat, $"Задача добавлена: {addedItem.Name} - {addedItem.CreatedAt} - {addedItem.Id}",cancellationToken);
+            var addedItem = await _toDoService.AddAsync(user, taskName!, cancellationToken);
+            await _botClient.SendMessage(message.Chat, $"Задача добавлена: {addedItem.Name} - {addedItem.CreatedAt} - {addedItem.Id}", cancellationToken);
         }
+       
 
         private async Task CmdInfo(Message message, ToDoUser? user, CancellationToken cancellationToken)
         {
