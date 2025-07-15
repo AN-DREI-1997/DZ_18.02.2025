@@ -19,11 +19,14 @@ namespace DZ_18._02._2025.Core.Services
 
         public async Task<ToDoUser?> GetUserAsync(long telegramUserId, CancellationToken cancellationToken)
         {
+
            return await _userRepository.GetUserByTelegramUserId(telegramUserId);
+
         }
 
         public async Task<ToDoUser> RegisterUserAsync(long telegramUserId, string telegramUserName, CancellationToken cancellationToken)
         {
+
             var user = new ToDoUser
             {
                 UserId = Guid.NewGuid(),
@@ -34,6 +37,7 @@ namespace DZ_18._02._2025.Core.Services
 
             await _userRepository.AddAsync(user, cancellationToken);
             return user; // Возврат объекта
+
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,11 +15,13 @@ namespace DZ_18._02._2025.Core.Services
         private int maxTaskLenght;
         private int maxTaskCount;
 
+r
         public ToDoService(IToDoRepository repository, int maxTaskCount, int maxTasklength)
         {
             _toDoRepository = repository;
             maxTaskLenght = maxTaskCount;
             maxTaskCount = maxTasklength;
+
         }
 
         public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken cancellationToken)
@@ -37,13 +39,16 @@ namespace DZ_18._02._2025.Core.Services
             {
                 throw new DuplicateTaskException(name); // Исключение, если задача уже существует
             }
+
             var item = new ToDoItem(user, name);
             await _toDoRepository.AddAsync(item, cancellationToken);
             return item;
+
         }
 
         public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
+
             await _toDoRepository.DeleteAsync(id, cancellationToken);
         }
 
@@ -69,6 +74,29 @@ namespace DZ_18._02._2025.Core.Services
             {
                 item.State = ToDoItemState.Completed;
                 await _toDoRepository.UpdateAsync(item, cancellationToken);
+
+            _toDoRepository.Delete(id);
+        }
+
+        public IReadOnlyList<ToDoItem> Find(ToDoUser user, string namePrefix)=> _toDoRepository.Find(user.UserId, t => t.Name.StartsWith(namePrefix, StringComparison.OrdinalIgnoreCase));
+
+        public IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId)
+        {
+          return  _toDoRepository.GetActiveByUserId(userId);
+        }
+        public IReadOnlyList<ToDoItem> GetAllByUserId(Guid guid)
+        { 
+          return _toDoRepository.GetAllByUserId(guid);
+        }
+        public void MarkCompleted(Guid id)
+        {
+            var todo = _toDoRepository.Get(id);
+            if (todo != null)
+            {
+                todo.State = ToDoItemState.Completed;
+                todo.StateChangedAt = DateTime.UtcNow;
+                _toDoRepository.Update(todo); // ОБНОВЛЯЕМ задачу в репозитории
+
             }
         }
     }
