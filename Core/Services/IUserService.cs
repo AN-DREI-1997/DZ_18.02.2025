@@ -9,7 +9,7 @@ namespace DZ_18._02._2025.Core.Services
 {
     interface IUserService
     {
-        ToDoUser RegisterUser(long telegramUserId, string telegramUserName);
-        ToDoUser? GetUser(long telegramUserId);
+        Task<ToDoUser> RegisterUserAsync(long telegramUserId, string telegramUserName, CancellationToken cancellationToken);
+        Task<ToDoUser?> GetUserAsync(long telegramUserId, CancellationToken cancellationToken);
     }
 }

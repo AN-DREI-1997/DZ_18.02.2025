@@ -15,35 +15,66 @@ namespace DZ_18._02._2025.Core.Services
         private int maxTaskLenght;
         private int maxTaskCount;
 
-       
+r
         public ToDoService(IToDoRepository repository, int maxTaskCount, int maxTasklength)
         {
             _toDoRepository = repository;
             maxTaskLenght = maxTaskCount;
             maxTaskCount = maxTasklength;
-            
+
         }
-        public ToDoItem Add(ToDoUser user, string name)
+
+        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken cancellationToken)
         {
             
             if (name.Length > maxTaskLenght)
             {
                 throw new TaskLengthLimitException(maxTaskLenght); //Исключение, если превышена длина имени задачи
             }
-            if (_toDoRepository.CountActive(user.UserId) >= maxTaskCount)
+            if ((await _toDoRepository.CountActiveAsync(user.UserId, cancellationToken)) >= maxTaskCount)
             {
                 throw new TaskCountLimitException(maxTaskCount); //Исключение, если превышено кол-во допустимых задач
             }
-            if (_toDoRepository.ExistsByName(user.UserId, name))
+            if (await _toDoRepository.ExistsByNameAsync(user.UserId, name, cancellationToken))
             {
                 throw new DuplicateTaskException(name); // Исключение, если задача уже существует
             }
-            var todo = new ToDoItem(user, name);
-            _toDoRepository.Add(todo); // Сохраняем задачу в репозитории
-            return todo;
+
+            var item = new ToDoItem(user, name);
+            await _toDoRepository.AddAsync(item, cancellationToken);
+            return item;
+
         }
-        public void Delete(Guid id)
+
+        public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
+
+            await _toDoRepository.DeleteAsync(id, cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<ToDoItem>> FindAsync(ToDoUser user, string namePrefix, CancellationToken cancellationToken)
+        {
+            return  await _toDoRepository.FindAsync(user.UserId, t => t.Name.StartsWith(namePrefix, StringComparison.OrdinalIgnoreCase), cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            return await _toDoRepository.GetActiveByUserIdAsync(userId, cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid guid, CancellationToken cancellationToken)
+        {
+            return await _toDoRepository.GetAllByUserIdAsync(guid, cancellationToken);
+        }
+
+        public async Task MarkCompletedAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var item = await _toDoRepository.GetAsync(id, cancellationToken);
+            if (item != null)
+            {
+                item.State = ToDoItemState.Completed;
+                await _toDoRepository.UpdateAsync(item, cancellationToken);
+
             _toDoRepository.Delete(id);
         }
 
@@ -65,8 +96,8 @@ namespace DZ_18._02._2025.Core.Services
                 todo.State = ToDoItemState.Completed;
                 todo.StateChangedAt = DateTime.UtcNow;
                 _toDoRepository.Update(todo); // ОБНОВЛЯЕМ задачу в репозитории
+
             }
         }
-
     }
 }

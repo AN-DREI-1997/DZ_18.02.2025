@@ -16,15 +16,15 @@ namespace DZ_18._02._2025.Core.Services
         {
             _toDoRepository = toDoRepository;
         }
-        // Реализуем метод Find
-        public IReadOnlyList<ToDoItem> Find(Guid userId, Func<ToDoItem, bool> predicate)
-        {
-            return _toDoRepository.Find(userId, predicate);
-        }
+        //// Реализуем метод Find
+        //public async Task<IReadOnlyList<ToDoItem>> FindAsync(Guid userId, Func<ToDoItem, bool> predicate, CancellationToken cancellationToken)
+        //{
+        //    return await _toDoRepository.FindAsync(userId, predicate, cancellationToken);
+        //}
 
-        public (int total, int completed, int active, DateTime generatedAt) GetUserStats(Guid userId)
+        public async Task<(int total, int completed, int active, DateTime generatedAt)> GetUserStatsAsync(Guid userId, CancellationToken cancellationToken)
         {
-            var todos = _toDoRepository.GetAllByUserId(userId);
+            var todos = await _toDoRepository.GetActiveByUserIdAsync(userId, cancellationToken);
             return (
                 total: todos.Count,
                 completed: todos.Count(t => t.State == ToDoItemState.Completed),

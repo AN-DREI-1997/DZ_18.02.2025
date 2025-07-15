@@ -15,17 +15,24 @@ namespace DZ_18._02._2025.Core.Services
         /// <param name="user"></param>
         /// <param name="namePrefix"></param>
         /// <returns></returns>
-        IReadOnlyList<ToDoItem> Find(ToDoUser user, string namePrefix);
-        IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId);
+        Task<IReadOnlyList<ToDoItem>> FindAsync(ToDoUser user, string namePrefix, CancellationToken cancellationToken);
+        Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Возвращает ToDoItem для UserId со статусом Active
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
+
+        Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+        Task<ToDoItem> AddAsync(ToDoUser user, string name,CancellationToken cancellationToken);
+        Task MarkCompletedAsync(Guid id, CancellationToken cancellationToken);
+        Task DeleteAsync(Guid id, CancellationToken cancellationToken);
+
         IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId);
         ToDoItem Add(ToDoUser user, string name);
         void MarkCompleted(Guid id);
         void Delete(Guid id);
+
     }
 }

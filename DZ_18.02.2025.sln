@@ -5,7 +5,7 @@ VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DZ_18.02.2025", "DZ_18.02.2025.csproj", "{2DDD683C-90FA-49C4-BA6E-6BD69903FB0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otus.ToDoList.ConsoleBot", "..\..\Otus.ToDoList.ConsoleBot\Otus.ToDoList.ConsoleBot.csproj", "{38CE889E-99C0-BF8C-A79F-860AE37AA7D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otus.ToDoList.ConsoleBot", "..\..\Otus.ToDoList.ConsoleBot_async\Otus.ToDoList.ConsoleBot.csproj", "{1308D453-A646-8C99-6CA3-1A1F306B2151}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,12 +17,15 @@ Global
 		{2DDD683C-90FA-49C4-BA6E-6BD69903FB0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DDD683C-90FA-49C4-BA6E-6BD69903FB0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DDD683C-90FA-49C4-BA6E-6BD69903FB0E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{38CE889E-99C0-BF8C-A79F-860AE37AA7D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{38CE889E-99C0-BF8C-A79F-860AE37AA7D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{38CE889E-99C0-BF8C-A79F-860AE37AA7D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{38CE889E-99C0-BF8C-A79F-860AE37AA7D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1308D453-A646-8C99-6CA3-1A1F306B2151}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1308D453-A646-8C99-6CA3-1A1F306B2151}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1308D453-A646-8C99-6CA3-1A1F306B2151}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1308D453-A646-8C99-6CA3-1A1F306B2151}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F2691FB6-682E-471F-9FA9-69CD30249B70}
 	EndGlobalSection
 EndGlobal
