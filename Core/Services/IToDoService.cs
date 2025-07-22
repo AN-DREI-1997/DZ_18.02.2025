@@ -15,7 +15,7 @@ namespace DZ_18._02._2025.Core.Services
         /// <param name="user"></param>
         /// <param name="namePrefix"></param>
         /// <returns></returns>
-        Task<IReadOnlyList<ToDoItem>> FindAsync(ToDoUser user, string namePrefix, CancellationToken cancellationToken);
+        Task<IReadOnlyList<ToDoItem>> FindAsync(Guid user, string namePrefix, CancellationToken cancellationToken);
         Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken cancellationToken);
 
         /// <summary>
@@ -28,11 +28,6 @@ namespace DZ_18._02._2025.Core.Services
         Task<ToDoItem> AddAsync(ToDoUser user, string name,CancellationToken cancellationToken);
         Task MarkCompletedAsync(Guid id, CancellationToken cancellationToken);
         Task DeleteAsync(Guid id, CancellationToken cancellationToken);
-
-        IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId);
-        ToDoItem Add(ToDoUser user, string name);
-        void MarkCompleted(Guid id);
-        void Delete(Guid id);
 
     }
 }

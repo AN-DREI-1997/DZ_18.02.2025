@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DZ_18._02._2025.Core.DadaAccess;
 using DZ_18._02._2025.Core.Entities;
 using static DZ_18._02._2025.Core.Exceptions.MyCustomException;
@@ -15,7 +10,6 @@ namespace DZ_18._02._2025.Core.Services
         private int maxTaskLenght;
         private int maxTaskCount;
 
-r
         public ToDoService(IToDoRepository repository, int maxTaskCount, int maxTasklength)
         {
             _toDoRepository = repository;
@@ -26,7 +20,7 @@ r
 
         public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken cancellationToken)
         {
-            
+
             if (name.Length > maxTaskLenght)
             {
                 throw new TaskLengthLimitException(maxTaskLenght); //Исключение, если превышена длина имени задачи
@@ -52,11 +46,6 @@ r
             await _toDoRepository.DeleteAsync(id, cancellationToken);
         }
 
-        public async Task<IReadOnlyList<ToDoItem>> FindAsync(ToDoUser user, string namePrefix, CancellationToken cancellationToken)
-        {
-            return  await _toDoRepository.FindAsync(user.UserId, t => t.Name.StartsWith(namePrefix, StringComparison.OrdinalIgnoreCase), cancellationToken);
-        }
-
         public async Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken)
         {
             return await _toDoRepository.GetActiveByUserIdAsync(userId, cancellationToken);
@@ -75,29 +64,13 @@ r
                 item.State = ToDoItemState.Completed;
                 await _toDoRepository.UpdateAsync(item, cancellationToken);
 
-            _toDoRepository.Delete(id);
-        }
-
-        public IReadOnlyList<ToDoItem> Find(ToDoUser user, string namePrefix)=> _toDoRepository.Find(user.UserId, t => t.Name.StartsWith(namePrefix, StringComparison.OrdinalIgnoreCase));
-
-        public IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId)
-        {
-          return  _toDoRepository.GetActiveByUserId(userId);
-        }
-        public IReadOnlyList<ToDoItem> GetAllByUserId(Guid guid)
-        { 
-          return _toDoRepository.GetAllByUserId(guid);
-        }
-        public void MarkCompleted(Guid id)
-        {
-            var todo = _toDoRepository.Get(id);
-            if (todo != null)
-            {
-                todo.State = ToDoItemState.Completed;
-                todo.StateChangedAt = DateTime.UtcNow;
-                _toDoRepository.Update(todo); // ОБНОВЛЯЕМ задачу в репозитории
-
+                _toDoRepository.DeleteAsync(id, cancellationToken);
             }
+        }
+
+        public async Task<IReadOnlyList<ToDoItem>> FindAsync(Guid userId, string namePrefix, CancellationToken cancellationToken)
+        {
+            return await _toDoRepository.FindAsync(userId, t => t.Name.StartsWith(namePrefix, StringComparison.OrdinalIgnoreCase), cancellationToken: cancellationToken);
         }
     }
 }
