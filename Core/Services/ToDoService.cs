@@ -6,11 +6,11 @@ namespace DZ_18._02._2025.Core.Services
 {
     internal class ToDoService : IToDoService
     {
-        private readonly IToDoRepository _toDoRepository;
+        private readonly FileToDoRepository _toDoRepository;
         private int maxTaskLenght;
         private int maxTaskCount;
 
-        public ToDoService(IToDoRepository repository, int maxTaskCount, int maxTasklength)
+        public ToDoService(FileToDoRepository repository, int maxTaskCount, int maxTasklength)
         {
             _toDoRepository = repository;
             maxTaskLenght = maxTaskCount;

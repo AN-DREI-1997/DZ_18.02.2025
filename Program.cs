@@ -68,8 +68,11 @@ namespace DZ_18._02._2025
                 DropPendingUpdates = true
             };
 
-            var toDoRep = new InMemoryToDoRepository(); //Репозиторий задач
-            var userRep = new InMemoryUserRepository(); //репозиторий пользователей
+            string pathFileToDoRep = Path.GetTempPath(); //указать конкретную директорию для хранения задач
+            string pathFileUserRep = Path.GetTempPath(); ////указать конкретную директорию для хранения пользователей
+
+            var toDoRep = new FileToDoRepository(pathFileToDoRep); //Репозиторий задач
+            var userRep = new FileUserRepository(pathFileUserRep); //репозиторий пользователей
 
             var userService = new UserService(userRep);
             var toDoService = new ToDoService(toDoRep, maxTaskCount, maxTaskLenght);
@@ -84,13 +87,14 @@ namespace DZ_18._02._2025
 
             void OnProcessingStarted(string message)
             {
-                handler.OnHandleUpdateStarted += msg => Console.WriteLine($"Началась обработка сообщения '{msg}'");
+                handler.OnHandleUpdateStarted += OnProcessingStarted;
                 Console.WriteLine($"Началась обработка сообщения '{message}'.");
             }
 
             void OnProcessingFinished(string message)
             {
-               handler.OnHandleUpdateCompleted += msg => Console.WriteLine($"Закончена обработка сообщения '{msg}'");
+                handler.OnHandleUpdateStarted -= OnProcessingStarted;
+                Console.WriteLine($"Началась обработка сообщения '{message}'.");
             }
 
             // Используем объект для отмены операции, если потребуется остановка
