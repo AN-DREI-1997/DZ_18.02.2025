@@ -13,9 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Otus.ToDoList.ConsoleBot">
-      <HintPath>..\..\Otus.ToDoList.ConsoleBot_async\bin\Debug\net8.0\Otus.ToDoList.ConsoleBot.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Telegram.Bot" Version="22.6.0" />
   </ItemGroup>
 
 </Project>

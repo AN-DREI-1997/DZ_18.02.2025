@@ -11,9 +11,8 @@ namespace DZ_18._02._2025.Core.Services
     {
 
         Task<(int total, int completed, int active, DateTime generatedAt)> GetUserStatsAsync(Guid userId, CancellationToken cancellationToken);
-   
 
-        (int total, int completed, int active, DateTime generatedAt) GetUserStats(Guid userId);
+       Task<IReadOnlyList<ToDoItem>> FindAsync(Guid userId, Func<ToDoItem, bool> predicate, CancellationToken cancellationToken);
 
     }
 }
