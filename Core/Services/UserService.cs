@@ -11,8 +11,8 @@ namespace DZ_18._02._2025.Core.Services
 {
     internal class UserService : IUserService
     {
-        private readonly IUserRepository _userRepository;
-        public UserService(IUserRepository userRepository) 
+        private readonly FileUserRepository _userRepository;
+        public UserService(FileUserRepository userRepository) 
         {
              _userRepository = userRepository;
         }
