@@ -7,39 +7,39 @@ namespace DZ_18._02._2025.Core.Services
     internal class ToDoService : IToDoService
     {
         private readonly FileToDoRepository _toDoRepository;
-        private int maxTaskLenght;
-        private int maxTaskCount;
+        private int _maxTaskLenght;
+        private int _maxTaskCount;
 
         public ToDoService(FileToDoRepository repository, int maxTaskCount, int maxTasklength)
         {
             _toDoRepository = repository;
-            maxTaskLenght = maxTaskCount;
-            maxTaskCount = maxTasklength;
+            _maxTaskCount = maxTaskCount;
+            _maxTaskLenght = maxTasklength;
 
         }
 
-        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken cancellationToken)
+        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadline, CancellationToken cancellationToken)
         {
 
-            if (name.Length > maxTaskLenght)
+            if (name.Length > _maxTaskLenght)
             {
-                throw new TaskLengthLimitException(maxTaskLenght); //Исключение, если превышена длина имени задачи
+                throw new TaskLengthLimitException(_maxTaskLenght); //Исключение, если превышена длина имени задачи
             }
-            if ((await _toDoRepository.CountActiveAsync(user.UserId, cancellationToken)) >= maxTaskCount)
+            if ((await _toDoRepository.CountActiveAsync(user.UserId, cancellationToken)) >= _maxTaskCount)
             {
-                throw new TaskCountLimitException(maxTaskCount); //Исключение, если превышено кол-во допустимых задач
+                throw new TaskCountLimitException(_maxTaskCount); //Исключение, если превышено кол-во допустимых задач
             }
             if (await _toDoRepository.ExistsByNameAsync(user.UserId, name, cancellationToken))
             {
                 throw new DuplicateTaskException(name); // Исключение, если задача уже существует
             }
 
-            var item = new ToDoItem(user, name);
+            var item = new ToDoItem(user, name, deadline);
             await _toDoRepository.AddAsync(item, cancellationToken);
             return item;
 
         }
-
+        
         public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
         {
 

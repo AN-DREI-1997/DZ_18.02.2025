@@ -1,11 +1,13 @@
-
 using DZ_18._02._2025.Core.DadaAccess;
 using DZ_18._02._2025.Core.Entities;
 using DZ_18._02._2025.Core.Services;
+using DZ_18._02._2025.TelegramBot.Scenario;
+using System.Globalization;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using TelegramBot.Scenarios;
 using static DZ_18._02._2025.Core.Exceptions.MyCustomException;
 
 namespace DZ_18._02._2025.TelegramBot
@@ -15,34 +17,60 @@ namespace DZ_18._02._2025.TelegramBot
         private readonly ITelegramBotClient _botClient;
         private readonly IUserService _userService;
         private readonly IToDoService _toDoService;
-        private readonly IToDoRepository _toDoRepository; // Добавляем репозиторий задач
-
+        private readonly IToDoRepository _toDoRepository;
+        private readonly IEnumerable<IScenario> _scenarios;
+        private readonly IScenarioContextRepository _contextRepository;
+        private readonly ScenarioProcessor _scenarioProcessor;
 
         // Делегаты и события
         public delegate void MessageEventHandler(string message);
         public event MessageEventHandler? OnHandleUpdateStarted;
         public event MessageEventHandler? OnHandleUpdateCompleted;
 
-        // Метод для экранирования спецсимволов Markdown
-        private string EscapeMarkdownCharacters(string input)
-        {
-            return input
-                .Replace("\\", "\\\\")          // Экранируем сам символ \
-                .Replace("-", "\\-");           // Экранируем дефис -
-        }
-
-        public UpdateHandler(ITelegramBotClient botClient, IUserService userService, IToDoService toDoService, IToDoRepository toDoRepository)
-
+        public UpdateHandler(
+            ITelegramBotClient botClient,
+            IUserService userService,
+            IToDoService toDoService,
+            IToDoRepository toDoRepository,
+            IEnumerable<IScenario> scenarios,
+            IScenarioContextRepository contextRepository)
         {
             _botClient = botClient;
             _userService = userService;
             _toDoService = toDoService;
             _toDoRepository = toDoRepository;
-
+            _scenarios = scenarios;
+            _contextRepository = contextRepository;
         }
-       
+
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
+            if (update.Message is not { } message)
+                return;
+
+            var userId = message.From.Id;
+            ToDoUser? user = await _userService.GetUserAsync(message.From.Id, cancellationToken);
+            // Проверяем наличие активного сценария
+            var context = await _contextRepository.GetContext(userId, cancellationToken);
+
+            if (context != null)
+            {
+                switch (context.CurrentStep)
+                {
+                    case "AwaitingTaskName":
+                        await HandleTaskNameInput(message, user, context, cancellationToken);
+                        break;
+                    case "AwaitingDeadline":
+                        await HandleDeadlineInput(message, user, context, cancellationToken);
+                        break;
+                }
+
+            }
+            else
+            {
+                await _scenarioProcessor.ProcessScenario(context, update, cancellationToken);
+                return;
+            }
             if (update.Type == UpdateType.Message && update.Message?.Text != null)
             {
                 // Событие начала обработки
@@ -55,40 +83,48 @@ namespace DZ_18._02._2025.TelegramBot
             }
         }
 
+
+        // Метод для экранирования спецсимволов Markdown
+        private string EscapeMarkdownCharacters(string input)
+        {
+            return input
+                .Replace("\\", "\\\\")          // Экранируем сам символ \
+                .Replace("-", "\\-");           // Экранируем дефис -
+        }
+
         private async Task ProcessMessage(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
         {
             ToDoUser? user = await _userService.GetUserAsync(message.From.Id, cancellationToken);
 
-            if (user == null)
-            {
-                await SendStartMenu(botClient, message.Chat.Id, cancellationToken);
-            }
-            else
-            {
-                await SendRegisteredMenu(botClient, message.Chat.Id, cancellationToken);
-            }
+            //if (user == null)
+            //{
+            //    await SendStartMenu(botClient, message.Chat.Id, cancellationToken);
+            //}
+            //else
+            //{
+            //    await SendRegisteredMenu(botClient, message.Chat.Id, cancellationToken);
+            //}
 
             await ProcessCommand(botClient, message, cancellationToken);
         }
 
-        private async Task SendRegisteredMenu(ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken)
-        {
-            await botClient.SendMessage(chatId, "Выберите нужную команду:",
-             replyMarkup: KeyboardHelper.CreateRegisteredButtons(), cancellationToken: cancellationToken);
-        }
+        //private async Task SendRegisteredMenu(ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken)
+        //{
+        //    await botClient.SendMessage(chatId, "Выберите нужную команду:",
+        //     replyMarkup: KeyboardHelper.CreateRegisteredButtons(), cancellationToken: cancellationToken);
+        //}
 
-        private async Task SendStartMenu(ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken)
-        {
-            await botClient.SendMessage(chatId, "Для начала работы нажмите /start",
-            replyMarkup: KeyboardHelper.CreateStartButton(), cancellationToken: cancellationToken);
-        }
+        //private async Task SendStartMenu(ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken)
+        //{
+        //    await botClient.SendMessage(chatId, "Для начала работы нажмите /start",
+        //    replyMarkup: KeyboardHelper.CreateStartButton(), cancellationToken: cancellationToken);
+        //}
 
         // Реализация метода HandleErrorAsync
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
         {
             Console.WriteLine($"Ошибка при обработке обновления: {exception.Message}");
 
-            // Мы можем уведомить пользователя, используя информацию, если доступна такая возможность
             if (exception is Telegram.Bot.Exceptions.ApiRequestException apiEx && !string.IsNullOrEmpty(apiEx.Message))
             {
                 await botClient.SendMessage(-1 /* Здесь укажите реальный Chat ID */, "Возникла внутренняя ошибка. Попробуйте позже.", cancellationToken: cancellationToken);
@@ -116,11 +152,11 @@ namespace DZ_18._02._2025.TelegramBot
                     if (user == null)
                     {
                         user = await _userService.RegisterUserAsync(message.From.Id, message.From.Username ?? "", cancellationToken);
-                       await _botClient.SendMessage(message.Chat, $"Привет, {user.TelegramUserName}! Ты успешно зарегистрирован.", cancellationToken: cancellationToken);
+                        await _botClient.SendMessage(message.Chat, $"Привет, {user.TelegramUserName}! Ты успешно зарегистрирован.", cancellationToken: cancellationToken);
                     }
                     else
                     {
-                       await _botClient.SendMessage(message.Chat, $"Привет, {user.TelegramUserName}!", cancellationToken: cancellationToken);
+                        await _botClient.SendMessage(message.Chat, $"Привет, {user.TelegramUserName}!", cancellationToken: cancellationToken);
                     }
                     return;
                 }
@@ -129,14 +165,14 @@ namespace DZ_18._02._2025.TelegramBot
                 {
                     if (cmd == "/help" || cmd == "/info")
                     {
-                       await ExecutePublicCommand(cmd, message, user,cancellationToken);
+                        await ExecutePublicCommand(cmd, message, user, cancellationToken);
                     }
                     else
                     {
-                       await _botClient.SendMessage(message.Chat, "Вы не зарегистрированы. Для использования программы зарегистрируйтесь командой /start.\n" +
-                                                            "Доступны только команды:\n" +
-                                                            "/help - показать помощь\n" +
-                                                            "/info - получить информацию о приложении", cancellationToken: cancellationToken);
+                        await _botClient.SendMessage(message.Chat, "Вы не зарегистрированы. Для использования программы зарегистрируйтесь командой /start.\n" +
+                                                             "Доступны только команды:\n" +
+                                                             "/help - показать помощь\n" +
+                                                             "/info - получить информацию о приложении", cancellationToken: cancellationToken);
                     }
                     return;
                 }
@@ -150,8 +186,8 @@ namespace DZ_18._02._2025.TelegramBot
                         await CmdInfo(message, user, cancellationToken);
                         break;
                     case "/addtask":
-                        await CmdAddTask(message, user, arg, cancellationToken);
-                       break;
+                        await CmdAddTask(message, user, cancellationToken);
+                        break;
                     case "/showtasks":
                         await CmdShowTasks(message, user, cancellationToken);
                         break;
@@ -164,21 +200,21 @@ namespace DZ_18._02._2025.TelegramBot
                     case "/showalltasks":
                         await CmdShowAllTasks(message, user, cancellationToken);
                         break;
-                    case "/report": // Добавляем обработку команды /report
+                    case "/report":
                         await CmdReport(message, user, cancellationToken);
                         break;
-                    case "/find": // Добавляем обработку команды /find
+                    case "/find":
                         await CmdFind(message, user, arg, cancellationToken);
                         break;
                     default:
-                        await  _botClient.SendMessage(message.Chat, "Команды не найдено. Используйте /help для помощи.", cancellationToken: cancellationToken);
+                        await _botClient.SendMessage(message.Chat, "Команды не найдено. Используйте /help для помощи.", cancellationToken: cancellationToken);
                         break;
                 }
             }
             else
             {
                 // Сообщение не начинается с '/', выводим подсказку
-               await _botClient.SendMessage(message.Chat, "Команда должна начинаться с символа '/'", cancellationToken: cancellationToken);
+                await _botClient.SendMessage(message.Chat, "Команда должна начинаться с символа '/'", cancellationToken: cancellationToken);
             }
         }
 
@@ -190,7 +226,7 @@ namespace DZ_18._02._2025.TelegramBot
                 return;
             }
 
-            var foundTodos = await _toDoService.FindAsync(user.UserId, arg,cancellationToken);
+            var foundTodos = await _toDoService.FindAsync(user.UserId, arg, cancellationToken);
             if (foundTodos.Any())
             {
                 foreach (var todo in foundTodos)
@@ -200,7 +236,7 @@ namespace DZ_18._02._2025.TelegramBot
             }
             else
             {
-               await _botClient.SendMessage(message.Chat, "Задачи не найдены.", cancellationToken: cancellationToken); // Убираем await
+                await _botClient.SendMessage(message.Chat, "Задачи не найдены.", cancellationToken: cancellationToken);
             }
         }
 
@@ -211,19 +247,19 @@ namespace DZ_18._02._2025.TelegramBot
             await _botClient.SendMessage(message.Chat, $"Статистика по задачам на {stats.generatedAt}:\nВсего: {stats.total};\nЗавершенных: {stats.completed};\nАктивных: {stats.active};", cancellationToken: cancellationToken);
         }
 
-        private async Task CmdShowAllTasks(Message message, ToDoUser user,CancellationToken cancellationToken)
+        private async Task CmdShowAllTasks(Message message, ToDoUser user, CancellationToken cancellationToken)
         {
-            var allTasks = await _toDoService.GetAllByUserIdAsync(user.UserId,cancellationToken);
+            var allTasks = await _toDoService.GetAllByUserIdAsync(user.UserId, cancellationToken);
             if (allTasks.Any())
             {
                 foreach (var task in allTasks)
                 {
-                    await _botClient.SendMessage(message.Chat, $"({task.State}) {task.Name} - {task.CreatedAt} - {task.Id}",cancellationToken: cancellationToken);
+                    await _botClient.SendMessage(message.Chat, $"({task.State}) {task.Name} - {task.CreatedAt} - {task.Id}", cancellationToken: cancellationToken);
                 }
             }
             else
             {
-               await _botClient.SendMessage(message.Chat, "Задач нет.", cancellationToken: cancellationToken);
+                await _botClient.SendMessage(message.Chat, "Задач нет.", cancellationToken: cancellationToken);
             }
         }
 
@@ -243,12 +279,11 @@ namespace DZ_18._02._2025.TelegramBot
 
             await _toDoService.MarkCompletedAsync(taskId, cancellationToken);
             await _botClient.SendMessage(message.Chat, "Задача отмечена как завершённая.", cancellationToken: cancellationToken);
-
         }
 
         private async Task CmdRemoveTask(Message message, ToDoUser user, string? taskNumberStr, CancellationToken cancellationToken)
         {
-            await CmdShowTasks(message, user,cancellationToken);
+            await CmdShowTasks(message, user, cancellationToken);
 
             if (string.IsNullOrWhiteSpace(taskNumberStr))
             {
@@ -279,44 +314,158 @@ namespace DZ_18._02._2025.TelegramBot
             }
             else
             {
-              await _botClient.SendMessage(message.Chat, "Список задач пуст.", cancellationToken: cancellationToken);
+                await _botClient.SendMessage(message.Chat, "Список задач пуст.", cancellationToken: cancellationToken);
             }
         }
 
-        /// <summary>
-        /// Метод для вызова команд, которые доступны не зарегистрированным пользователям.
-        /// </summary>
-        /// <param name="cmd"></param>
-        /// <param name="message"></param>
-        /// <param name="user"></param>
         private async Task ExecutePublicCommand(string cmd, Message message, ToDoUser? user, CancellationToken cancellationToken)
         {
             switch (cmd)
             {
                 case "/help":
-                   await CmdHelp(message, user, cancellationToken);
+                    await CmdHelp(message, user, cancellationToken);
                     break;
                 case "/info":
-                   await CmdInfo(message, user,cancellationToken);
+                    await CmdInfo(message, user, cancellationToken);
                     break;
             }
         }
 
-
-        private async Task CmdAddTask(Message message, ToDoUser? user, string? taskName, CancellationToken cancellationToken)
-
+        private async Task CmdAddTask(Message message, ToDoUser user, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(taskName))
+            // Проверяем, нет ли активного контекста
+            var currentContext = await _contextRepository.GetContext(long.Parse(user.TelegramUserId.ToString()), cancellationToken);
+            if (currentContext != null)
             {
-                await _botClient.SendMessage(message.Chat, "Название задачи не может быть пустым.", cancellationToken: cancellationToken);
+                await _botClient.SendMessage(
+                    chatId: message.Chat.Id,
+                    text: "У вас уже есть активная операция. Завершите её сначала.",
+                    cancellationToken: cancellationToken);
                 return;
             }
 
-            var addedItem = await _toDoService.AddAsync(user, taskName!, cancellationToken);
-            await _botClient.SendMessage(message.Chat, $"Задача добавлена: {addedItem.Name} - {addedItem.CreatedAt} - {addedItem.Id}", cancellationToken: cancellationToken);
-       }
-       
+            // Создаем новый контекст для ожидания названия задачи
+            var context = new ScenarioContext(user.TelegramUserId, ScenarioType.AddTask)
+            {
+                UserId = message.From.Id,
+                CurrentStep = "AwaitingTaskName"
+            };
 
+            await _contextRepository.SetContext(Guid.Parse(user.TelegramUserId.ToString()), context, cancellationToken);
+
+            await _botClient.SendMessage(chatId: message.Chat.Id,text: "Введите название задачи:",cancellationToken: cancellationToken);
+        }
+        private async Task HandleDeadlineInput(Message message,ToDoUser user,ScenarioContext context,CancellationToken cancellationToken)
+        {
+            // Получаем ID задачи из контекста
+            if (!context.Data.TryGetValue("TaskId", out var taskIdObj) || taskIdObj is not Guid taskId)
+            {
+                await ClearContextAndNotify(user, message.Chat.Id,
+                    "Ошибка: не удалось найти информацию о задаче. Пожалуйста, начните заново.",
+                    cancellationToken);
+                return;
+            }
+
+            string responseText = message.Text?.Trim() ?? "";
+            DateTime? deadline = null;
+
+            // Обработка варианта "нет" дедлайна
+            if (responseText.Equals("нет", StringComparison.OrdinalIgnoreCase))
+            {
+                deadline = DateTime.MaxValue; // или null, в зависимости от вашей логики
+            }
+            else
+            {
+                // Парсим дату
+                if (!DateTime.TryParseExact(responseText, "dd.MM.yyyy",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                {
+                    await _botClient.SendMessage(
+                        chatId: message.Chat.Id,
+                        text: "Неверный формат даты. Пожалуйста, укажите дедлайн в формате ДД.ММ.ГГГГ (например, 31.12.2023) или 'нет'.",
+                        cancellationToken: cancellationToken);
+                    return;
+                }
+
+                // Проверяем, что дата не в прошлом
+                if (parsedDate.Date < DateTime.Today)
+                {
+                    await _botClient.SendMessage(
+                        chatId: message.Chat.Id,
+                        text: "Дата не может быть в прошлом. Пожалуйста, укажите корректную дату.",
+                        cancellationToken: cancellationToken);
+                    return;
+                }
+
+                deadline = parsedDate;
+            }
+
+            // Обновляем задачу в базе данных
+            try
+            {
+                ToDoItem item = await _toDoRepository.GetAsync(taskId, cancellationToken);
+                var updatedItem = await _toDoRepository.UpdateAsync(item, cancellationToken);
+
+                await ClearContextAndNotify(user, message.Chat.Id,
+                    deadline == DateTime.MaxValue
+                        ? $"Задача '{updatedItem.Name}' сохранена без дедлайна."
+                        : $"Дедлайн для задачи '{updatedItem.Name}' установлен на {deadline:dd.MM.yyyy}",
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                await ClearContextAndNotify(user, message.Chat.Id,
+                    $"Ошибка при обновлении задачи: {ex.Message}",
+                    cancellationToken);
+            }
+        }
+
+        private async Task ClearContextAndNotify(ToDoUser user,long chatId,string message,CancellationToken cancellationToken)
+        {
+            // Очищаем контекст
+            await _contextRepository.ResetContext(
+                long.Parse(user.TelegramUserId.ToString()),
+                cancellationToken);
+
+            // Отправляем сообщение пользователю
+            await _botClient.SendMessage(
+                chatId: chatId,
+                text: message,
+                cancellationToken: cancellationToken);
+        }
+        private async Task HandleTaskNameInput(Message message, ToDoUser user, ScenarioContext context, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(message.Text))
+            {
+                await _botClient.SendMessage(
+                    chatId: message.Chat.Id,
+                    text: "Название задачи не может быть пустым. Пожалуйста, введите название:",
+                    cancellationToken: cancellationToken);
+                return;
+            }
+
+            string taskName = message.Text;
+            DateTime deadline = DateTime.MaxValue;
+
+            // Добавляем задачу без дедлайна (пока)
+            var addedItem = await _toDoService.AddAsync(user, taskName, deadline, cancellationToken);
+
+            // Обновляем контекст для ожидания ввода дедлайна
+            context.CurrentStep = "AwaitingDeadline";
+            context.Data = new Dictionary<string, object>
+            {
+                ["TaskId"] = addedItem.Id
+            };
+
+            await _contextRepository.SetContext(Guid.Parse(user.TelegramUserId.ToString()), context, cancellationToken);
+
+            // Запрашиваем дедлайн
+            await _botClient.SendMessage(
+                chatId: message.Chat.Id,
+                text: $"Задача добавлена: {addedItem.Name}\n\n" +
+                      "Пожалуйста, укажите дедлайн для задачи в формате ДД.ММ.ГГГГ (например, 31.12.2023) или 'нет' если дедлайн не нужен.",
+                cancellationToken: cancellationToken);
+        }
         private async Task CmdInfo(Message message, ToDoUser? user, CancellationToken cancellationToken)
         {
             if (user == null)

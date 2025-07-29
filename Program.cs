@@ -2,6 +2,7 @@
 using DZ_18._02._2025.Core.Services;
 using DZ_18._02._2025.Infastructure.DataAccess;
 using DZ_18._02._2025.TelegramBot;
+using DZ_18._02._2025.TelegramBot.Scenario;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -49,7 +50,8 @@ namespace DZ_18._02._2025
                 }
             }
             // Получаем токен бота из переменных окружения операционной системы
-            string token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN");
+            string token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN", EnvironmentVariableTarget.User);
+
             // Проверяем наличие токена
             if (string.IsNullOrEmpty(token))
             {
@@ -77,17 +79,19 @@ namespace DZ_18._02._2025
             var userService = new UserService(userRep);
             var toDoService = new ToDoService(toDoRep, maxTaskCount, maxTaskLenght);
 
+            IEnumerable<IScenario> scenarios = new List<IScenario>();
+            var scenarioContextRepository = new InMemoryScenarioContextRepository();
+
             // Создаем обработчик, передавая зависимости через конструктор
             //IUpdateHandler handler = new TelegramBot.UpdateHandler(botClient, userService, toDoService,toDoRep, maxTaskCount, maxTaskLenght);
 
-            var handler = new UpdateHandler(botClient, userService, toDoService, toDoRep);
+            var handler = new UpdateHandler(botClient, userService, toDoService, toDoRep,scenarios,scenarioContextRepository);
             // Подписываемся на события начала и завершения обработки обновлений
-            
-            
 
+            handler.OnHandleUpdateStarted += OnProcessingStarted;
             void OnProcessingStarted(string message)
             {
-                handler.OnHandleUpdateStarted += OnProcessingStarted;
+              
                 Console.WriteLine($"Началась обработка сообщения '{message}'.");
             }
 
