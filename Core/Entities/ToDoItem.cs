@@ -11,15 +11,17 @@ namespace DZ_18._02._2025.Core.Entities
         Active,
         Completed
     }
-    public class ToDoItem(ToDoUser user, string name)
+    public class ToDoItem(ToDoUser user, string name, DateTime deadline)
     {
         public Guid Id { get; private set; } = Guid.NewGuid();
         public ToDoUser User { get; set; } = user;
         public string Name { get; set; } = name;
         public DateTime CreatedAt { get; private set; } 
         public ToDoItemState State { get; set; }
-        public DateTime? StateChangedAt { get; set; } 
+        public DateTime? StateChangedAt { get; set; }
 
-        
+        public DateTime Deadline { get; set; } = deadline;
+
+
     }
 }
