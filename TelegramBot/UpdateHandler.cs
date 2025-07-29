@@ -190,7 +190,7 @@ namespace DZ_18._02._2025.TelegramBot
                 return;
             }
 
-            var foundTodos = await _toDoService.FindAsync(user, arg,cancellationToken);
+            var foundTodos = await _toDoService.FindAsync(user.UserId, arg,cancellationToken);
             if (foundTodos.Any())
             {
                 foreach (var todo in foundTodos)
