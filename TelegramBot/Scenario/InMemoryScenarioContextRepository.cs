@@ -22,9 +22,9 @@ namespace DZ_18._02._2025.TelegramBot.Scenario
             return Task.CompletedTask;
         }
 
-        public Task SetContext(Guid userId, ScenarioContext context, CancellationToken ct)
+        public Task SetContext(long userId, ScenarioContext context, CancellationToken ct)
         {
-            dict_contexts[long.Parse(userId.ToString())] = context;
+            dict_contexts[userId] = context;
             return Task.CompletedTask;
         }
     }

@@ -1,7 +1,16 @@
 ﻿namespace TelegramBot.Scenarios;
 
+/// <summary>
+/// Перечисление enum результата выполнения сценария
+/// </summary>
 public enum ScenarioResult
 {
-    Transition, // Переход к следующему шагу
-    Completed   // Сценарий завершен
+    /// <summary>
+    /// Переход к следующему шагу. Сообщение обработано, но сценарий еще не завершен
+    /// </summary>
+    Transition, 
+    /// <summary>
+    /// сценарий завершён
+    /// </summary>
+    Completed 
 }
