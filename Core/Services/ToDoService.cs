@@ -10,12 +10,9 @@ namespace DZ_18._02._2025.Core.Services
         private int _maxTaskLenght;
         private int _maxTaskCount;
 
-        public ToDoService(FileToDoRepository repository, int maxTaskCount, int maxTasklength)
+        public ToDoService(FileToDoRepository repository)
         {
             _toDoRepository = repository;
-            _maxTaskCount = maxTaskCount;
-            _maxTaskLenght = maxTasklength;
-
         }
 
         public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadline, CancellationToken cancellationToken)

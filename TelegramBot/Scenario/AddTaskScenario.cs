@@ -26,61 +26,68 @@ namespace DZ_18._02._2025.TelegramBot.Scenario
 
         public async Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient bot, ScenarioContext context, Update update, CancellationToken ct)
         {
+            ScenarioResult result = default(ScenarioResult);
+            ReplyKeyboardMarkup replyMarkup;
             switch (context.CurrentStep)
             {
                 case null:
-                    return await HandleInitialStep(bot, context, update, ct);
+                    replyMarkup = new ReplyKeyboardMarkup(new[]
+                    {
+                    new KeyboardButton[] { "/cancel",}
+                })
+                    {
+                        ResizeKeyboard = true,
+                    };
+
+                    await bot.SendMessage(update.Message.Chat, "Введите название задачи:", cancellationToken: ct, replyMarkup: replyMarkup);
+
+                    context.CurrentStep = "Name";
+
+                    result = ScenarioResult.Transition;
+
+                    break;
                 case "Name":
-                    return await HandleNameStep(bot, context, update, ct);
+                    string name = update.Message.Text;
+
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        context.Data.Add("Name", name);
+
+                        context.CurrentStep = "Deadline";
+
+                        await bot.SendMessage(update.Message.Chat, "Введите дату завершения задачи:", cancellationToken: ct);
+
+                        return ScenarioResult.Transition;
+                    }
+
+                    break;
+                case "Deadline":
+                    string deadline = update.Message.Text;
+
+                    if (!string.IsNullOrEmpty(deadline))
+                    {
+                        ToDoUser toDoUser = _userService.GetUserAsync(update?.Message?.From?.Id ?? 0, ct).Result;
+
+                        if (!DateTime.TryParse(deadline, out DateTime deadlineDate))
+                        {
+                            await bot.SendMessage(update.Message.Chat, "Дата ожидается в формате dd.MM.yyyy", cancellationToken: ct);
+
+                            return ScenarioResult.Transition;
+                        }
+
+                        _toDoService.AddAsync(toDoUser, (string)context.Data["Name"], deadlineDate, ct);
+
+                        await bot.SendMessage(update.Message.Chat, "Задача добавлена.", cancellationToken: ct, replyMarkup: KeyboardHelper.GetDefaultKeyboard());
+
+                        return ScenarioResult.Completed;
+                    }
+
+                    break;
                 default:
-                    await bot.SendMessage(
-                        context.UserId,
-                        "Произошла ошибка в обработке сценария. Сценарий будет сброшен.",
-                        replyMarkup: KeyboardHelper.CanceldButtons(),
-                        cancellationToken: ct);
-                    return ScenarioResult.Completed;
+                    throw new ArgumentOutOfRangeException($"Непредусмотренный к обработке шаг \"{context.CurrentStep}\"");
             }
+            return result;
         }
-        private async Task<ScenarioResult> HandleInitialStep(ITelegramBotClient bot, ScenarioContext context, Update update, CancellationToken ct)
-        {
-            var user = await _userService.GetUserAsync(context.UserId, ct);
-            context.Data["User"] = user;
-            context.CurrentStep = "Name";
-
-            await bot.SendMessage(
-                context.UserId,
-                "Введите название задачи:",
-                replyMarkup: new ReplyKeyboardMarkup(new KeyboardButton("/cancel"))
-                {
-                    ResizeKeyboard = true
-                },
-                cancellationToken: ct);
-
-            return ScenarioResult.Transition;
-        }
-
-        private async Task<ScenarioResult> HandleNameStep(ITelegramBotClient bot, ScenarioContext context, Update update, CancellationToken ct)
-        {
-            if (string.IsNullOrWhiteSpace(update.Message?.Text))
-            {
-                await bot.SendMessage(
-                    context.UserId,
-                    "Пожалуйста, введите название задачи.",
-                    replyMarkup: KeyboardHelper.CanceldButtons(),
-                    cancellationToken: ct);
-                return ScenarioResult.Transition;
-            }
-
-            context.Data["TaskName"] = update.Message.Text;
-            context.CurrentStep = "Deadline";
-
-            await bot.SendMessage(
-                context.UserId,
-                "Введите срок выполнения задачи в формате дд.ММ.гггг (например, 31.12.2023):",
-                replyMarkup: KeyboardHelper.CanceldButtons(),
-                cancellationToken: ct);
-
-            return ScenarioResult.Transition;
-        }
+       
     }
 }

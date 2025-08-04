@@ -9,7 +9,7 @@ namespace DZ_18._02._2025.TelegramBot.Scenario
 {   
     public class ScenarioContext
     {
-        public long UserId { get; set; } // Id пользователя в Telegram
+        public long UserId { get; } // Id пользователя в Telegram
         public ScenarioType CurrentScenario { get; set; }
         public string? CurrentStep { get; set; } // Текущий шаг сценария
         public Dictionary<string, object> Data { get; set; } = new();
@@ -18,6 +18,7 @@ namespace DZ_18._02._2025.TelegramBot.Scenario
         {
             UserId = userId;
             CurrentScenario = scenario;
+            Data = [];
         }
     }
 }
