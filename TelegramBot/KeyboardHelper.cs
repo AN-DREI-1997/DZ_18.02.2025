@@ -2,29 +2,11 @@
 
 public class KeyboardHelper
 {
-    public static InlineKeyboardMarkup CreateStartButton()
-    {
-        return new InlineKeyboardMarkup(new[]
-        {
-            InlineKeyboardButton.WithCallbackData("/start", "/start"),
-        });
-    }
-
-    public static InlineKeyboardMarkup reateRegisteredButtons()
-    {
-        return new InlineKeyboardMarkup(new[]
-        {
-            InlineKeyboardButton.WithCallbackData("/start", "/start")
-        });
-    }
-
-    public static ReplyKeyboardMarkup CreateRegisteredButtons()
+    public static ReplyKeyboardMarkup GetDefaultKeyboard()
     {
         return new ReplyKeyboardMarkup(new[]
         {
-            new[] {new KeyboardButton("/showalltasks")},
-            new[] {new KeyboardButton("/showtasks")},
-            new[] {new KeyboardButton("/report")}
+            new KeyboardButton[] { "/addtask", "/showalltasks", "/showtasks", "/report" }
         })
         {
             ResizeKeyboard = true
