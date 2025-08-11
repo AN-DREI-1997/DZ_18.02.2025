@@ -4,10 +4,10 @@ public class KeyboardHelper
 {
     public static ReplyKeyboardMarkup GetDefaultKeyboard()
     {
-        return new ReplyKeyboardMarkup(new[]
-        {
+        return new ReplyKeyboardMarkup(
+        [
             new KeyboardButton[] { "/addtask", "/showalltasks", "/showtasks", "/report" }
-        })
+        ])
         {
             ResizeKeyboard = true
         };

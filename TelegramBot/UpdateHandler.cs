@@ -114,17 +114,16 @@ namespace DZ_18._02._2025.TelegramBot
 
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
-            string InfoMessage = "Доступны команды: start, help, info, addtask, showtasks, removetask, completetask, showalltasks, cancel, report, find, exit. При вводе команды указываейте вначале символ / (слеш).";
+            string InfoMessage = "Доступны команды: start, help, info, addtask, show, removetask, completetask, cancel, report, find, exit. При вводе команды указываейте вначале символ / (слеш).";
             var commands = new List<BotCommand>
             {
                 new BotCommand {Command = "start", Description = "Старт бота"},
                 new BotCommand {Command = "help", Description = "Подсказка по командам бота"},
                 new BotCommand {Command = "info", Description = "Информация по версии и дате версии бота"},
                 new BotCommand {Command = "addtask", Description = "Добавление новой задачи"},
-                new BotCommand {Command = "showtasks", Description = "Отображение списка задач"},
+                new BotCommand {Command = "show", Description = "Отображение списка задач"},
                 new BotCommand {Command = "removetask", Description = "Удаление задачи"},
                 new BotCommand {Command = "completetask", Description = "Завершение задачи"},
-                new BotCommand {Command = "showalltasks", Description = "Отображение списка задач со статусами"},
                 new BotCommand {Command = "cancel", Description = "Отмена выполнения сценария"},
                 new BotCommand {Command = "report", Description = "Статистика по задачам"},
                 new BotCommand {Command = "find", Description = "Поиск задачи"},
@@ -202,16 +201,13 @@ namespace DZ_18._02._2025.TelegramBot
                                     await CmdAddTaskAsync(botClient,update, ct);
                                     break;
                                 case "/showtasks":
-                                    await CmdShowTasks(botClient, update, ct, replyMarkup);
+                                    await CmdShow(botClient, update, ct, replyMarkup);
                                     break;
                                 case string remStr when remStr.StartsWith("/removetask "):
                                     await CmdRemoveTask(botClient, update, userCommand.Substring("/removetask ".Length), ct, replyMarkup);
                                     break;
                                 case string bc when bc.StartsWith("/completetask "):
                                     CmdCompleteTask(message,userCommand.Substring("/completetask ".Length), ct);
-                                    break;
-                                case "/showalltasks":
-                                    await CmdShowAllTasks(botClient, update, ct, replyMarkup);
                                     break;
                                 case "/report":
                                     await CmdReport(botClient, update, ct, replyMarkup);
@@ -326,32 +322,6 @@ namespace DZ_18._02._2025.TelegramBot
                 $"\nАктивных: {stats.active};", cancellationToken: cancellationToken, replyMarkup:replyKeyboard);
         }
 
-        private async Task CmdShowAllTasks(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, ReplyKeyboardMarkup replyKeyboard)
-        {
-            var toDoUser = await _userService.GetUserAsync(update.Message.From.Id, cancellationToken);
-            var usersId = toDoUser?.UserId ?? Guid.Empty;
-            if (usersId == null)
-            {
-                await _botClient.SendMessage(update.Message.Chat, "Пользователь не зарегистрирован, список задач недоступен!", cancellationToken: cancellationToken);
-            }
-
-            if((await _toDoService.GetAllByUserIdAsync(usersId, cancellationToken)).Count == 0)
-            {
-                    await _botClient.SendMessage(update.Message.Chat, "Задач нет.", cancellationToken: cancellationToken);
-            }
-            else
-            {
-                foreach (var task in await _toDoService.GetAllByUserIdAsync(usersId, cancellationToken))
-                {
-                    await botClient.SendMessage(update.Message.Chat,
-                        Regex.Replace($"({Enum.GetName(task.State)}) {task.Name} - {task.CreatedAt} - `{task.Id}`", "[-\\.\\(\\)\\[\\]\\+\\!\\=_\\|\\*\\~\\>\\#\\{\\}]", "\\$0"),
-                        cancellationToken: cancellationToken,
-                        parseMode: ParseMode.MarkdownV2,
-                        replyMarkup: replyKeyboard);
-                }
-            }
-        }
-
         void CmdCompleteTask(Message message, string? taskIdStr, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(taskIdStr))
@@ -372,7 +342,7 @@ namespace DZ_18._02._2025.TelegramBot
 
         private async Task CmdRemoveTask(ITelegramBotClient botClient, Update update, string? taskNumberStr, CancellationToken cancellationToken, ReplyKeyboardMarkup replyKeyboard)
         {
-            await CmdShowTasks(botClient, update, cancellationToken, replyKeyboard);
+            await CmdShow(botClient, update, cancellationToken, replyKeyboard);
 
             if (string.IsNullOrWhiteSpace(taskNumberStr))
             {
@@ -390,7 +360,7 @@ namespace DZ_18._02._2025.TelegramBot
             await _botClient.SendMessage(update.Message.Chat, "Задача успешно удалена.", cancellationToken: cancellationToken);
         }
 
-        private async Task CmdShowTasks(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, ReplyKeyboardMarkup replyKeyboard)
+        private async Task CmdShow(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken, ReplyKeyboardMarkup replyKeyboard)
         {
             var toDoUser = await _userService.GetUserAsync(update.Message.From.Id, cancellationToken);
             var usersId = toDoUser?.UserId ?? Guid.Empty;        
@@ -441,10 +411,9 @@ namespace DZ_18._02._2025.TelegramBot
             /help - Показать доступные команды;
             /info - Информация о приложении;
             /addtask имя задачи - Добавить задачу;
-            /showtasks - Показать активные задачи;
+            /show - Показать активные задачи;
             /removetask номер-задачи - Удалить задачу;
             /completetask guid-задачи - Завершить задачу;
-            /showalltasks - Показать все задачи;
             /report - Показать статистику по задачам;
             /find начало-названия задачи - Найти задачи по названию;
             ", cancellationToken: ct, replyMarkup: replyKeyboard);
