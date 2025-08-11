@@ -11,7 +11,8 @@ namespace DZ_18._02._2025.Core.Entities
         Active,
         Completed
     }
-    public class ToDoItem(ToDoUser user, string name, DateTime deadline)
+
+    public class ToDoItem(ToDoUser user, string name, DateTime deadline, ToDoList toDoList)
     {
         public Guid Id { get; private set; } = Guid.NewGuid();
         public ToDoUser User { get; set; } = user;
@@ -22,6 +23,6 @@ namespace DZ_18._02._2025.Core.Entities
 
         public DateTime Deadline { get; set; } = deadline;
 
-
+        public ToDoList ToDoList { get; set; } = toDoList;
     }
 }
