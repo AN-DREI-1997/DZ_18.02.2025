@@ -1,5 +1,7 @@
 ﻿using System;
+
 using System.Collections.Concurrent;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +11,7 @@ namespace DZ_18._02._2025.TelegramBot.Scenario
 {
     internal class InMemoryScenarioContextRepository : IScenarioContextRepository
     {
+
         private ConcurrentDictionary <long, ScenarioContext> dict_contexts = new();
 
         public Task<ScenarioContext?> GetContext(long userId, CancellationToken ct)
@@ -19,7 +22,9 @@ namespace DZ_18._02._2025.TelegramBot.Scenario
 
         public Task ResetContext(long userId, CancellationToken ct)
         {
+
             dict_contexts.Remove(userId, out _);
+
             return Task.CompletedTask;
         }
 

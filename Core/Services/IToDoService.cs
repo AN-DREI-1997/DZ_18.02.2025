@@ -25,7 +25,9 @@ namespace DZ_18._02._2025.Core.Services
         /// <returns></returns>
 
         Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+
         Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadline, CancellationToken cancellationToken, ToDoList toDoList);
+
         Task MarkCompletedAsync(Guid id, CancellationToken cancellationToken);
         Task DeleteAsync(Guid id, CancellationToken cancellationToken);
 

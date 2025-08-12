@@ -1,4 +1,4 @@
-﻿using DZ_18._02._2025.Core.Entities;
+using DZ_18._02._2025.Core.Entities;
 using DZ_18._02._2025.Core.Services;
 using DZ_18._02._2025.TelegramBot.Dto;
 using System;

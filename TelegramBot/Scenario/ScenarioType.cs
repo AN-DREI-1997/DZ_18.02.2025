@@ -8,4 +8,5 @@ public enum ScenarioType
     AddTask,
     AddList,
     DeleteList
+
 }
