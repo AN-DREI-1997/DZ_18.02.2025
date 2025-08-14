@@ -10,9 +10,6 @@ namespace DZ_18._02._2025.TelegramBot.Dto
     {
         public Guid? ToDoListId { get; set; }
 
-        public ToDoListCallbackDto()
-        {
-        }
         public ToDoListCallbackDto(string action, Guid? toDoListId = null)
         {
             Action = action;
