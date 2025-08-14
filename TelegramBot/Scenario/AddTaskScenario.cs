@@ -90,9 +90,9 @@ namespace DZ_18._02._2025.TelegramBot.Scenario
 
                     inlineKeyboardButtonsList.Add(new[] { InlineKeyboardButton.WithCallbackData("Без списка", "addtask|") });
 
-                    inlineKeyboardButtonsList.AddRange(
-                        _toDoListService.GetUserLists(((ToDoUser)context.Data["User"]).UserId, ct).Result.Select(
-                            l => new[] { InlineKeyboardButton.WithCallbackData(l.Name, "addtask|" + l.Id) }));
+                     inlineKeyboardButtonsList.AddRange(
+                    _toDoListService.GetUserLists(((ToDoUser)context.Data["User"]).UserId, ct).Result.Select(
+                        l => new[]{InlineKeyboardButton.WithCallbackData(l.Name, new ToDoListCallbackDto("addtask", l.Id).ToString())}));
 
                     var inlineKeyboard = new InlineKeyboardMarkup(inlineKeyboardButtonsList);
 
