@@ -1,4 +1,5 @@
-﻿using DZ_18._02._2025.Core.Entities;
+﻿using DZ_18._02._2025.Core.DadaAccess;
+using DZ_18._02._2025.Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace DZ_18._02._2025.Core.DadaAccess
+namespace DZ_18._02._2025.Infastructure.DataAccess
 {
     internal class FileUserRepository : IUserRepository
     {

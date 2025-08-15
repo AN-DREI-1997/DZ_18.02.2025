@@ -1,4 +1,4 @@
-﻿using DZ_18._02._2025.Core.DadaAccess;
+using DZ_18._02._2025.Core.DadaAccess;
 using DZ_18._02._2025.Core.Services;
 using DZ_18._02._2025.Infastructure.DataAccess;
 using DZ_18._02._2025.TelegramBot;
@@ -7,14 +7,11 @@ using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-//using static DZ_18._02._2025.Exceptions.MyCustomException;
 
 namespace DZ_18._02._2025
 {
     internal class Program
-    {
-        private static List<string> listTask = new List<string>(); //лист для хранения задач
-        
+    {     
         static async Task Main()
         {
             // Получаем токен бота из переменных окружения операционной системы
@@ -41,22 +38,27 @@ namespace DZ_18._02._2025
             string pathFileToDoRep = Path.GetTempPath(); //указать конкретную директорию для хранения задач
             string pathFileUserRep = Path.GetTempPath(); ////указать конкретную директорию для хранения пользователей
 
-            var toDoRep = new FileToDoRepository(pathFileToDoRep); //Репозиторий задач
-            var userRep = new FileUserRepository(pathFileUserRep); //репозиторий пользователей
+            var toDoRepository = new FileToDoRepository(Path.Combine(Directory.GetCurrentDirectory(), "FileToDoRepository"));
+            IToDoService toDoService = new ToDoService(toDoRepository);
 
-            var userService = new UserService(userRep);
-            var toDoService = new ToDoService(toDoRep);
+            var userRepository = new FileUserRepository(Path.Combine(Directory.GetCurrentDirectory(), "FileUserRepository"));
+            IUserService userService = new UserService(userRepository);
 
-           // IToDoListService toDoListService = new ToDoListService(toDoListRepository);
+            IToDoListRepository toDoListRepository = new FileToDoListRepository(Path.Combine(Directory.GetCurrentDirectory(), "FileToDoListRepository"));
+            IToDoListService toDoListService = new ToDoListService(toDoListRepository);
 
-            IScenario[] scenarios = new IScenario[]
-           {
-                new AddTaskScenario(userService, toDoService),
-           };
+            IScenarioContextRepository contextRepository = new InMemoryScenarioContextRepository();
+
+            IScenario[] scenarios =
+           [
+                 new AddTaskScenario(userService, toDoService, toDoListService),
+                new AddListScenario(userService, toDoListService),
+                new DeleteListScenario(userService, toDoListService, toDoService)
+           ];
 
             var scenarioContextRepository = new InMemoryScenarioContextRepository();
 
-            var handler = new UpdateHandler(botClient, userService, toDoService, toDoRep,scenarios,scenarioContextRepository);
+            var handler = new UpdateHandler(botClient, userService, toDoService, toDoRepository,scenarios,scenarioContextRepository);
 
             try
             {
@@ -94,14 +96,6 @@ namespace DZ_18._02._2025
                 handler.UpdateStarted -= handler.OnHandleUpdateStarted;
                 handler.UpdateCompleted -= handler.OnHandleUpdateCompleted;
             }
-        }
-        private static int ValidateTaskCount(string input)
-        {
-            if (!int.TryParse(input, out int taskCount) || taskCount < 1 || taskCount > 100)
-            {
-                throw new ArgumentException("Введите корректное число от 1 до 100.");
-            }
-            return taskCount;
         }
     }
 }

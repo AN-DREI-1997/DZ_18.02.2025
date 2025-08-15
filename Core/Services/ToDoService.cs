@@ -1,5 +1,5 @@
-using DZ_18._02._2025.Core.DadaAccess;
 using DZ_18._02._2025.Core.Entities;
+using DZ_18._02._2025.Infastructure.DataAccess;
 using static DZ_18._02._2025.Core.Exceptions.MyCustomException;
 
 namespace DZ_18._02._2025.Core.Services
@@ -15,7 +15,9 @@ namespace DZ_18._02._2025.Core.Services
             _toDoRepository = repository;
         }
 
-        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadline, CancellationToken cancellationToken)
+
+        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadline, CancellationToken cancellationToken, ToDoList? toDoList)
+
         {
 
             if (name.Length > _maxTaskLenght)
@@ -31,7 +33,8 @@ namespace DZ_18._02._2025.Core.Services
                 throw new DuplicateTaskException(name); // Исключение, если задача уже существует
             }
 
-            var item = new ToDoItem(user, name, deadline);
+            var item = new ToDoItem(user, name, deadline, toDoList);
+
             await _toDoRepository.AddAsync(item, cancellationToken);
             return item;
 
@@ -61,13 +64,17 @@ namespace DZ_18._02._2025.Core.Services
                 item.State = ToDoItemState.Completed;
                 await _toDoRepository.UpdateAsync(item, cancellationToken);
 
-                _toDoRepository.DeleteAsync(id, cancellationToken);
+                await _toDoRepository.DeleteAsync(id, cancellationToken);
             }
         }
 
         public async Task<IReadOnlyList<ToDoItem>> FindAsync(Guid userId, string namePrefix, CancellationToken cancellationToken)
         {
             return await _toDoRepository.FindAsync(userId, t => t.Name.StartsWith(namePrefix, StringComparison.OrdinalIgnoreCase), cancellationToken: cancellationToken);
+        }
+        public async Task<IReadOnlyList<ToDoItem>> GetByUserIdAndList(Guid userId, Guid? listId, CancellationToken ct)
+        {
+            return GetAllByUserIdAsync(userId,ct).Result.Where(t => t.ToDoList?.Id == listId).ToList().AsReadOnly();
         }
     }
 }
