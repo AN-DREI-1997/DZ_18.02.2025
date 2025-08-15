@@ -35,8 +35,8 @@ namespace DZ_18._02._2025.TelegramBot.Scenario
                     ToDoUser toDoUser = _userService.GetUserAsync(update?.CallbackQuery?.From?.Id ?? 0, ct).Result;
                     context.Data.Add("User", toDoUser);
                     var inlineKeyboard = new InlineKeyboardMarkup(
-                        _toDoListService.GetUserLists(toDoUser.UserId, ct).Result.Select(
-                                 l => new[] { InlineKeyboardButton.WithCallbackData(l.Name, "deletelist|" + l.Id) }));
+                    _toDoListService.GetUserLists(toDoUser.UserId, ct).Result.Select(
+                             l => new[]{InlineKeyboardButton.WithCallbackData(l.Name, new ToDoListCallbackDto("deletelist", l.Id).ToString())}));
                     context.CurrentStep = "Approve";
                     await bot.SendMessage(update.CallbackQuery.Message.Chat.Id,
                         "Выберите список для удаления",
